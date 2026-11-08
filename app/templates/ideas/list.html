@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_macros.html" import idea_card, pager, empty with context %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">{{ title }} <span class="text-muted-2 fs-6 fw-normal">({{ pagination.total }})</span></h1>
+  {% if current_user.is_authenticated %}
+    <a href="{{ url_for('ideas.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New idea</a>
+  {% endif %}
+</div>
+
+{% if not mine %}
+<form class="card filter-card mb-3" method="get" action="{{ url_for('ideas.list_ideas') }}">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label" for="q">Search</label>
+      <div class="input-icon"><i class="bi bi-search"></i><input class="form-control" id="q" name="q" value="{{ filters.q }}" placeholder="Title or description" maxlength="100"></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label" for="category">Category</label>
+      <select class="form-select" id="category" name="category" data-autosubmit>
+        <option value="">All categories</option>
+        {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if filters.category == c.id }}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label" for="sort">Sort by</label>
+      <select class="form-select" id="sort" name="sort" data-autosubmit>
+        {% for key, label in sorts.items() %}<option value="{{ key }}" {{ 'selected' if filters.sort == key }}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-2 d-grid">
+      {% if filters.status %}<input type="hidden" name="status" value="{{ filters.status }}">{% endif %}
+      <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Apply</button>
+    </div>
+  </div>
+</form>
+
+<div class="status-tabs mb-3" role="navigation" aria-label="Filter by status">
+  <a href="{{ url_with(status=None, page=None) }}" class="{{ 'active' if not filters.status }}">All</a>
+  {% for key, label in STATUS_LABELS.items() %}
+    <a href="{{ url_with(status=key, page=None) }}" class="{{ 'active' if filters.status == key }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+{% if filters.q or filters.category %}
+<div class="active-filters d-flex flex-wrap gap-2 mb-3 align-items-center">
+  <span class="small text-muted-2">Filters:</span>
+  {% if filters.q %}<span class="chip">“{{ filters.q }}” <a href="{{ url_with(q=None, page=None) }}" aria-label="Remove search filter"><i class="bi bi-x-lg"></i></a></span>{% endif %}
+  {% if filters.category %}<span class="chip">Category <a href="{{ url_with(category=None, page=None) }}" aria-label="Remove category filter"><i class="bi bi-x-lg"></i></a></span>{% endif %}
+  <a class="small" href="{{ url_for('ideas.list_ideas') }}">Clear all</a>
+</div>
+{% endif %}
+{% endif %}
+
+{% for idea in ideas %}
+  {{ idea_card(idea, my_votes.get(idea.id, 0)) }}
+{% else %}
+  {% call empty('inbox', 'No ideas found', 'Try different filters or start the conversation yourself.') %}
+    {% if current_user.is_authenticated %}<a class="btn btn-primary" href="{{ url_for('ideas.create') }}">Submit an idea</a>{% endif %}
+    {% if filters.q or filters.category or filters.status %}<a class="btn btn-ghost" href="{{ url_for('ideas.list_ideas') }}">Clear filters</a>{% endif %}
+  {% endcall %}
+{% endfor %}
+
+{{ pager(pagination) }}
+{% endblock %}
