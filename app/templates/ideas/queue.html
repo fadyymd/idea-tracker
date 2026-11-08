@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "_macros.html" import category_chip, avatar, pager, empty with context %}
+{% block title %}Review queue{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <div>
+    <h1 class="h3 mb-0"><i class="bi bi-clipboard-check text-primary"></i> Review queue</h1>
+    <p class="text-muted-2 mb-0">Oldest submissions first. Use the quick actions or open an idea to write a note.</p>
+  </div>
+</div>
+
+<div class="status-tabs mb-3">
+  <a class="{{ 'active' if show == 'pending' }}" href="{{ url_for('ideas.review_queue', show='pending') }}">Pending ({{ counts.get('pending', 0) }})</a>
+  <a class="{{ 'active' if show == 'under_review' }}" href="{{ url_for('ideas.review_queue', show='under_review') }}">Under review ({{ counts.get('under_review', 0) }})</a>
+  <a class="{{ 'active' if show == 'open' }}" href="{{ url_for('ideas.review_queue', show='open') }}">Both</a>
+</div>
+
+{% for idea in ideas %}
+<article class="card idea-card st-{{ idea.status }} mb-3">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+      <span class="status-pill st-{{ idea.status }}"><i class="bi bi-{{ idea.status_icon }}"></i>{{ idea.status_label }}</span>
+      {{ category_chip(idea.category) }}
+      <span class="small text-muted-2 ms-auto">{{ idea.created_at|timeago }} · score {{ idea.score }} · {{ idea.comment_count }} comments</span>
+    </div>
+    <h2 class="h5 title mb-1"><a href="{{ url_for('ideas.detail', idea_id=idea.id) }}">{{ idea.title }}</a></h2>
+    <p class="idea-excerpt mb-3">{{ idea.description }}</p>
+    <div class="d-flex flex-wrap align-items-center gap-2" style="position:relative;z-index:2">
+      <span class="meta me-auto">{{ avatar(idea.submitter, 'avatar-sm') }} {{ idea.submitter.username }}</span>
+      {% if idea.submitter_id == current_user.id and not current_user.is_admin %}
+        <span class="small text-muted-2">Your own idea — someone else must review it.</span>
+      {% else %}
+        {% for status, label, style in [('under_review', 'Start review', 'ghost'), ('approved', 'Approve', 'primary'), ('rejected', 'Reject', 'ghost')] %}
+          {% if idea.status != status %}
+          <form method="post" action="{{ url_for('ideas.review', idea_id=idea.id) }}" {% if status == 'rejected' %}data-confirm="Reject this idea without a note? You can add a note from the idea page."{% endif %}>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="status" value="{{ status }}">
+            <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+            <button class="btn btn-sm btn-{{ style }}" type="submit">{{ label }}</button>
+          </form>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</article>
+{% else %}
+  {% call empty('check2-all', 'All caught up', 'There is nothing waiting for review right now.') %}{% endcall %}
+{% endfor %}
+
+{{ pager(pagination) }}
+{% endblock %}
