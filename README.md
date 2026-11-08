@@ -8,7 +8,7 @@
 ![UI](https://img.shields.io/badge/UI-Bootstrap%205%20%C2%B7%20dark%20mode-7952B3?logo=bootstrap&logoColor=white)
 ![DB](https://img.shields.io/badge/DB-SQLite%20%7C%20PostgreSQL-336791)
 
-🌐 **Live demo:** https://idea-tracker-nf9p.onrender.com · 💻 **Source:** https://github.com/fadyymd/idea-tracker
+🌐 **Live demo:** https://idea-tracker-1.onrender.com · 💻 **Source:** https://github.com/fadyymd/idea-tracker
 
 Built for **Innovation Management – Mini Project 1** (Flask · SQLite/PostgreSQL · HTML/CSS/JavaScript).
 
