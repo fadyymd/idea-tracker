@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Admin dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0"><i class="bi bi-speedometer2 text-primary"></i> Administration</h1>
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.export_ideas') }}"><i class="bi bi-download"></i> Export ideas (CSV)</a>
+</div>
+
+<div class="row g-3 mb-4">
+  {% for label, value, icon, href in [
+    ('Users', stats.users, 'people', url_for('admin.users')),
+    ('Ideas', stats.ideas, 'lightbulb', url_for('ideas.list_ideas')),
+    ('Awaiting review', stats.awaiting, 'hourglass-split', url_for('ideas.review_queue')),
+    ('Votes', stats.votes, 'hand-thumbs-up', none),
+    ('Comments', stats.comments, 'chat-dots', none),
+    ('Open feedback', stats.open_feedback, 'chat-square-text', url_for('admin.feedback'))] %}
+  <div class="col-6 col-md-4 col-xl-2">
+    <{{ 'a href=' ~ href if href else 'div' }} class="card stat-card h-100"{% if href %} {% endif %}><div class="card-body">
+      <div class="stat-icon mb-2"><i class="bi bi-{{ icon }}"></i></div>
+      <div class="stat-value">{{ value }}</div><div class="text-muted-2 small">{{ label }}</div>
+    </div></{{ 'a' if href else 'div' }}>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6">Ideas by status</h2>
+      <div style="position:relative;height:260px"><canvas id="statusChart" aria-label="Ideas by status" role="img"></canvas></div>
+      <table class="table table-sm mt-3 mb-0">
+        {% for s in status_data %}<tr><td><span class="status-pill st-{{ s.key }}">{{ s.label }}</span></td><td class="text-end fw-semibold">{{ s.count }}</td></tr>{% endfor %}
+      </table>
+    </div></div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6">Ideas by category</h2>
+      <div style="position:relative;height:320px"><canvas id="categoryChart" aria-label="Ideas by category" role="img"></canvas></div>
+    </div></div>
+  </div>
+</div>
+
+<script type="application/json" id="chart-data">{{ {'status': status_data, 'categories': category_data}|tojson }}</script>
+{% endblock %}
+
+{% block vendor_scripts %}
+<script src="{{ url_for('static', filename='vendor/chartjs/chart.umd.min.js') }}"></script>
+{% endblock %}
