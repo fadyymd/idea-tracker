@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Account settings{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Account settings</h1>
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card text-center">
+      <div class="profile-cover h-{{ hue(current_user.id) }}"></div>
+      <div class="card-body p-4 profile-head">
+        <div class="avatar avatar-lg h-{{ hue(current_user.id) }} mx-auto mb-3">{{ current_user.username[0]|upper }}</div>
+        <h2 class="h5 mb-0">{{ current_user.username }}</h2>
+        <div class="text-muted-2 small mb-3">{{ current_user.role|capitalize }} · joined {{ current_user.created_at|datetime('%b %Y') }}</div>
+        <div class="row text-center mb-3">
+          <div class="col"><div class="stat-value fs-4">{{ stats.ideas }}</div><div class="small text-muted-2">Ideas</div></div>
+          <div class="col"><div class="stat-value fs-4">{{ stats.votes }}</div><div class="small text-muted-2">Votes</div></div>
+          <div class="col"><div class="stat-value fs-4">{{ stats.comments }}</div><div class="small text-muted-2">Comments</div></div>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('main.user_profile', username=current_user.username) }}">View public profile</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card mb-4"><div class="card-body p-4">
+      <h2 class="h5 mb-3">Account details</h2>
+      <form method="post" novalidate data-loading>
+        {{ profile_form.hidden_tag() }}
+        {{ field(profile_form.email, icon='envelope') }}
+        <button class="btn btn-primary" type="submit" name="p-submit" value="1">Save changes</button>
+      </form>
+    </div></div>
+    <div class="card"><div class="card-body p-4">
+      <h2 class="h5 mb-3">Change password</h2>
+      <form method="post" novalidate data-loading>
+        {{ password_form.hidden_tag() }}
+        {{ field(password_form.current_password, icon='key') }}
+        <div class="row"><div class="col-sm-6">{{ field(password_form.new_password, icon='lock') }}</div><div class="col-sm-6">{{ field(password_form.confirm, icon='lock-fill') }}</div></div>
+        <button class="btn btn-primary" type="submit" name="c-submit" value="1">Change password</button>
+      </form>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

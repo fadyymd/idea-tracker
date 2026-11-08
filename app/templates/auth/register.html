@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Create account{% endblock %}
+
+{% block content %}
+<div class="auth-wrap"><div class="card auth-card"><div class="row g-0">
+  <div class="col-md-5 d-none d-md-block">
+    <div class="auth-side">
+      <h2 class="h3 fw-bold">Join the community</h2>
+      <p class="mb-0 opacity-75">Your ideas can shape what happens next.</p>
+      <ul>
+        <li><i class="bi bi-check-circle-fill"></i> Submit unlimited ideas</li>
+        <li><i class="bi bi-check-circle-fill"></i> Get transparent feedback from reviewers</li>
+        <li><i class="bi bi-check-circle-fill"></i> Build your contributor profile</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col-md-7"><div class="p-4 p-md-5">
+    <h1 class="h4 mb-4">Create your account</h1>
+    <form method="post" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      {{ field(form.username, placeholder='3–32 characters', icon='person') }}
+      {{ field(form.email, placeholder='you@example.com', icon='envelope') }}
+      <div class="row"><div class="col-sm-6">{{ field(form.password, help='8+ characters, letters and digits.', icon='lock') }}</div><div class="col-sm-6">{{ field(form.confirm, icon='lock-fill') }}</div></div>
+      <button class="btn btn-primary w-100 btn-lg" type="submit">Create account</button>
+    </form>
+    <p class="text-center small mt-4 mb-0">Already registered? <a class="fw-semibold" href="{{ url_for('auth.login') }}">Sign in</a></p>
+  </div></div>
+</div></div></div>
+{% endblock %}

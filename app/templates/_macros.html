@@ -1,0 +1,141 @@
+{# ---------- avatar ---------- #}
+{% macro avatar(user, size='') %}
+  <span class="avatar {{ size }} h-{{ hue(user.id) }}" aria-hidden="true">{{ user.username[0]|upper }}</span>
+{% endmacro %}
+
+{# ---------- category chip ---------- #}
+{% macro category_chip(category, link=True) %}
+  {% if link %}
+  <a class="chip h-{{ hue(category.id) }}" href="{{ url_for('ideas.list_ideas', category=category.id) }}"><i class="bi bi-tag-fill"></i>{{ category.name }}</a>
+  {% else %}
+  <span class="chip h-{{ hue(category.id) }}"><i class="bi bi-tag-fill"></i>{{ category.name }}</span>
+  {% endif %}
+{% endmacro %}
+
+{# ---------- form helpers ---------- #}
+{% macro field(f, placeholder='', help='', rows=None, icon=None, counter=None) %}
+  <div class="mb-3">
+    {% if f.type == 'BooleanField' %}
+      <div class="form-check">
+        {{ f(class='form-check-input') }}
+        <label class="form-check-label" for="{{ f.id }}">{{ f.label.text }}</label>
+      </div>
+    {% else %}
+      {{ f.label(class='form-label') }}
+      {% set cls = 'form-select' if f.type == 'SelectField' else 'form-control' %}
+      {% if f.errors %}{% set cls = cls ~ ' is-invalid' %}{% endif %}
+      {% if icon %}<div class="input-icon"><i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% endif %}
+      {% if rows %}
+        {{ f(class=cls, placeholder=placeholder, rows=rows, **({'data-counter': counter} if counter else {})) }}
+      {% else %}
+        {{ f(class=cls, placeholder=placeholder) }}
+      {% endif %}
+      {% if icon %}</div>{% endif %}
+      {% for e in f.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+      {% if counter %}<div class="form-text text-end"><span id="{{ counter }}">0</span> characters</div>{% endif %}
+      {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{# ---------- status pill ---------- #}
+{% macro status_badge(idea) %}
+  <span class="status-pill st-{{ idea.status }}"><i class="bi bi-{{ idea.status_icon }}"></i>{{ idea.status_label }}</span>
+{% endmacro %}
+
+{# ---------- vote widget ---------- #}
+{% macro vote_box(idea, my_vote) %}
+  {% set own = current_user.is_authenticated and idea.submitter_id == current_user.id %}
+  <div class="vote-box" data-idea-id="{{ idea.id }}" data-vote-url="{{ url_for('ideas.vote', idea_id=idea.id) }}">
+    <button type="button" class="vote-btn vote-up {{ 'active' if my_vote == 1 }}" data-value="1" aria-label="Upvote" title="{{ 'You cannot vote on your own idea' if own else 'Upvote' }}" {{ 'disabled' if own }}><i class="bi bi-caret-up-fill"></i></button>
+    <div class="vote-score" aria-live="polite" aria-label="Score">{{ idea.score }}</div>
+    <button type="button" class="vote-btn vote-down {{ 'active' if my_vote == -1 }}" data-value="-1" aria-label="Downvote" title="{{ 'You cannot vote on your own idea' if own else 'Downvote' }}" {{ 'disabled' if own }}><i class="bi bi-caret-down-fill"></i></button>
+  </div>
+{% endmacro %}
+
+{# ---------- idea card (list view) ---------- #}
+{% macro idea_card(idea, my_vote, show_status_bar=True) %}
+  <article class="card idea-card st-{{ idea.status }} mb-3">
+    <div class="card-body d-flex gap-3">
+      {{ vote_box(idea, my_vote) }}
+      <div class="flex-grow-1 min-w-0">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+          {{ status_badge(idea) }}
+          {{ category_chip(idea.category) }}
+          {% if idea.score >= 5 %}<span class="hot-flag"><i class="bi bi-fire"></i> Popular</span>{% endif %}
+        </div>
+        <h2 class="h5 title mb-1"><a href="{{ url_for('ideas.detail', idea_id=idea.id) }}">{{ idea.title }}</a></h2>
+        <p class="idea-excerpt mb-2">{{ idea.description }}</p>
+        <div class="meta">
+          <a class="meta-link d-inline-flex align-items-center gap-1" href="{{ url_for('main.user_profile', username=idea.submitter.username) }}" style="position:relative;z-index:2">
+            {{ avatar(idea.submitter, 'avatar-sm') }}{{ idea.submitter.username }}</a>
+          <span><i class="bi bi-clock"></i> {{ idea.created_at|timeago }}</span>
+          <span><i class="bi bi-chat-dots"></i> {{ idea.comment_count }}</span>
+        </div>
+      </div>
+    </div>
+  </article>
+{% endmacro %}
+
+{# ---------- pagination ---------- #}
+{% macro pager(pagination) %}
+  {% if pagination.pages > 1 %}
+  <nav aria-label="Pagination" class="mt-4">
+    <ul class="pagination justify-content-center flex-wrap">
+      <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+        <a class="page-link" href="{{ url_with(page=pagination.prev_num) if pagination.has_prev else '#' }}" aria-label="Previous page"><i class="bi bi-chevron-left"></i></a>
+      </li>
+      {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if p %}
+          <li class="page-item {{ 'active' if p == pagination.page }}"><a class="page-link" href="{{ url_with(page=p) }}" {{ 'aria-current=page' if p == pagination.page }}>{{ p }}</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+        <a class="page-link" href="{{ url_with(page=pagination.next_num) if pagination.has_next else '#' }}" aria-label="Next page"><i class="bi bi-chevron-right"></i></a>
+      </li>
+    </ul>
+    <p class="text-center small text-muted-2">Showing {{ pagination.first }}–{{ pagination.last }} of {{ pagination.total }}</p>
+  </nav>
+  {% endif %}
+{% endmacro %}
+
+{# ---------- empty state ---------- #}
+{% macro empty(icon, title, text='') %}
+  <div class="empty"><i class="bi bi-{{ icon }}"></i><h2 class="h5 mt-2">{{ title }}</h2>{% if text %}<p class="mb-3">{{ text }}</p>{% endif %}{{ caller() if caller }}</div>
+{% endmacro %}
+
+{# ---------- threaded comments (recursive) ---------- #}
+{% macro comment_node(c, idea, depth=0) %}
+  <div class="comment" id="comment-{{ c.id }}">
+    <div class="comment-head">
+      {{ avatar(c.user) }}
+      <a class="name" href="{{ url_for('main.user_profile', username=c.user.username) }}">{{ c.user.username }}</a>
+      {% if c.user_id == idea.submitter_id %}<span class="role-tag author">Author</span>{% endif %}
+      {% if c.user.role == 'administrator' %}<span class="role-tag admin">Admin</span>{% elif c.user.role == 'reviewer' %}<span class="role-tag reviewer">Reviewer</span>{% endif %}
+      <span class="text-muted-2 small">· {{ c.created_at|timeago }}</span>
+    </div>
+    {% if c.is_deleted %}
+      <p class="comment-body fst-italic text-muted-2">[comment removed]</p>
+    {% else %}
+      <p class="comment-body">{{ c.content }}</p>
+      <div class="comment-actions">
+        {% if current_user.is_authenticated %}
+          <button type="button" class="btn btn-link btn-sm p-0 reply-btn" data-parent="{{ c.id }}" data-author="{{ c.user.username }}"><i class="bi bi-reply"></i> Reply</button>
+          {% if c.user_id == current_user.id or current_user.is_admin %}
+            <form class="d-inline" method="post" action="{{ url_for('ideas.delete_comment', comment_id=c.id) }}" data-confirm="Delete this comment?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-link btn-sm p-0 danger" type="submit"><i class="bi bi-trash"></i> Delete</button>
+            </form>
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endif %}
+    {% if c.children %}
+      <div class="comment-children {{ 'flat' if depth >= 4 }}">
+        {% for child in c.children %}{{ comment_node(child, idea, depth + 1) }}{% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endmacro %}

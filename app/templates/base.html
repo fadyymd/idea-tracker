@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="description" content="Submit, vote on, discuss and track innovative ideas.">
+  <meta name="theme-color" content="#4f46e5">
+  <title>{% block title %}Home{% endblock %} · Idea Tracker</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
+  <script src="{{ url_for('static', filename='js/theme-init.js') }}"></script>
+  <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/fonts.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  {% block head %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<nav class="navbar navbar-expand-lg app-navbar sticky-top" aria-label="Main navigation">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('main.index') }}">
+      <img src="{{ url_for('static', filename='logo.svg') }}" alt="" width="30" height="30"> Idea Tracker
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1">
+        <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint in ('ideas.list_ideas', 'ideas.detail') }}" href="{{ url_for('ideas.list_ideas') }}"><i class="bi bi-lightbulb"></i> Ideas</a></li>
+        {% if current_user.is_authenticated %}
+        <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'ideas.my_ideas' }}" href="{{ url_for('ideas.my_ideas') }}"><i class="bi bi-person-lines-fill"></i> My ideas</a></li>
+        {% if current_user.is_reviewer %}
+        <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == 'ideas.review_queue' }}" href="{{ url_for('ideas.review_queue') }}"><i class="bi bi-clipboard-check"></i> Review{% if queue_count %} <span class="nav-badge">{{ queue_count }}</span>{% endif %}</a></li>
+        {% endif %}
+        {% endif %}
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {{ 'active' if request.blueprint == 'admin' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-shield-lock"></i> Admin</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.users') }}"><i class="bi bi-people me-2"></i>Users</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.categories') }}"><i class="bi bi-tags me-2"></i>Categories</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.feedback') }}"><i class="bi bi-chat-square-text me-2"></i>Feedback</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.export_ideas') }}"><i class="bi bi-download me-2"></i>Export ideas (CSV)</a></li>
+          </ul>
+        </li>
+        {% endif %}
+      </ul>
+
+      <form class="nav-search me-lg-3 my-2 my-lg-0" action="{{ url_for('ideas.list_ideas') }}" method="get" role="search">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input class="form-control form-control-sm" type="search" name="q" placeholder="Search ideas…" aria-label="Search ideas" maxlength="100" value="{{ request.args.get('q', '') if request.endpoint == 'ideas.list_ideas' }}">
+      </form>
+
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-ghost icon-btn" id="theme-toggle" type="button" aria-label="Toggle dark mode"><i class="bi bi-moon-stars"></i></button>
+        {% if current_user.is_authenticated %}
+          <a class="btn btn-sm btn-primary" href="{{ url_for('ideas.create') }}"><i class="bi bi-plus-lg"></i> New idea</a>
+          <div class="dropdown">
+            <button class="btn btn-ghost btn-sm d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu">
+              <span class="avatar avatar-sm h-{{ hue(current_user.id) }}">{{ current_user.username[0]|upper }}</span>
+              <span class="d-none d-xl-inline">{{ current_user.username }}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li class="px-3 py-1"><div class="fw-semibold">{{ current_user.username }}</div><span class="role-tag {{ 'admin' if current_user.is_admin else 'reviewer' if current_user.is_reviewer }}">{{ current_user.role }}</span></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{{ url_for('main.user_profile', username=current_user.username) }}"><i class="bi bi-person me-2"></i>My public profile</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="bi bi-gear me-2"></i>Account settings</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('main.feedback') }}"><i class="bi bi-chat-heart me-2"></i>Send feedback</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form action="{{ url_for('auth.logout') }}" method="post">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="dropdown-item text-danger" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Sign out</button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        {% else %}
+          <a class="btn btn-sm btn-ghost" href="{{ url_for('auth.login') }}">Sign in</a>
+          <a class="btn btn-sm btn-primary" href="{{ url_for('auth.register') }}">Sign up</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>
+
+{# flash messages are rendered as toasts #}
+<div class="toast-container position-fixed top-0 end-0 p-3 toast-stack" id="toast-stack" aria-live="polite">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      {% set kind = category if category in ['success','danger','warning','info'] else 'info' %}
+      <div class="toast toast-{{ kind }}" role="{{ 'alert' if kind in ['danger','warning'] else 'status' }}">
+        <div class="d-flex align-items-center gap-2 p-3">
+          <i class="bi bi-{{ {'success':'check-circle-fill','danger':'exclamation-octagon-fill','warning':'exclamation-triangle-fill','info':'info-circle-fill'}[kind] }} toast-icon"></i>
+          <div class="flex-grow-1">{{ message }}</div>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+<main id="main" class="container py-4 flex-grow-1 fade-up">
+  {% block content %}{% endblock %}
+</main>
+
+<button id="to-top" class="btn btn-primary icon-btn" type="button" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
+
+<footer class="app-footer py-3 mt-auto">
+  <div class="container d-flex flex-wrap justify-content-between gap-2">
+    <span><img src="{{ url_for('static', filename='logo.svg') }}" alt="" width="18" height="18" class="me-1">Idea Tracker · Innovation Management project</span>
+    <span>
+      <a href="{{ url_for('ideas.list_ideas') }}">Ideas</a> ·
+      <a href="{{ url_for('main.feedback') }}">Feedback</a> ·
+      <a href="{{ url_for('main.about') }}">About</a>
+    </span>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+{% block vendor_scripts %}{% endblock %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

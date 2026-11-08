@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<div class="auth-wrap"><div class="card auth-card"><div class="row g-0">
+  <div class="col-md-6 d-none d-md-block">
+    <div class="auth-side">
+      <h2 class="h3 fw-bold">Welcome back 👋</h2>
+      <p class="mb-0 opacity-75">Pick up where you left off.</p>
+      <ul>
+        <li><i class="bi bi-lightbulb-fill"></i> Follow the progress of your ideas</li>
+        <li><i class="bi bi-hand-thumbs-up-fill"></i> Vote on what matters to you</li>
+        <li><i class="bi bi-chat-dots-fill"></i> Join the discussion</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col-md-6"><div class="p-4 p-md-5">
+    <h1 class="h4 mb-4">Sign in</h1>
+    <form method="post" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      {{ field(form.identifier, placeholder='username or email', icon='person') }}
+      {{ field(form.password, icon='lock') }}
+      {{ field(form.remember) }}
+      <button class="btn btn-primary w-100 btn-lg" type="submit">Sign in</button>
+    </form>
+    <p class="text-center small mt-4 mb-0">New here? <a class="fw-semibold" href="{{ url_for('auth.register') }}">Create an account</a></p>
+  </div></div>
+</div></div></div>
+{% endblock %}
