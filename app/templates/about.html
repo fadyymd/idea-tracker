@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-8">
+  <h1 class="h3 mb-3">About Idea Tracker</h1>
+  <div class="card mb-4"><div class="card-body p-4">
+    <p>Idea Tracker is a platform for collecting, discussing and evaluating innovative ideas. Anyone can browse; members submit, vote and comment; reviewers decide; administrators keep the platform healthy.</p>
+    <h2 class="h5 mt-4">Roles</h2>
+    <ul class="mb-0">
+      <li><strong>Submitter</strong> – submits ideas, votes once per idea, comments.</li>
+      <li><strong>Reviewer</strong> – evaluates ideas and records a visible decision.</li>
+      <li><strong>Administrator</strong> – manages users, categories and feedback.</li>
+    </ul>
+  </div></div>
+  <div class="card"><div class="card-body p-4">
+    <h2 class="h5">Idea lifecycle</h2>
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      {% for key, label in STATUS_LABELS.items() %}<span class="status-pill st-{{ key }}"><i class="bi bi-{{ STATUS_ICONS[key] }}"></i>{{ label }}</span>{% endfor %}
+    </div>
+    <p class="text-muted-2 small mt-3 mb-0">You can edit or delete your idea while it is pending. Keyboard users: press <kbd>Tab</kbd> to reach the “Skip to content” link.</p>
+  </div></div>
+</div></div>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, avatar, category_chip, empty with context %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="hero p-4 p-md-5 mb-4">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-7">
+      <span class="badge rounded-pill text-bg-light mb-3 px-3 py-2"><i class="bi bi-stars text-warning"></i> Innovation, organised</span>
+      <h1 class="display-5 mb-3">Great ideas deserve a structured path.</h1>
+      <p class="lead mb-4">Submit ideas, vote on the ones that matter, discuss them with your community and follow each one from proposal to implementation.</p>
+      <div class="d-flex flex-wrap gap-2">
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('ideas.create') }}" class="btn btn-light btn-lg"><i class="bi bi-plus-lg"></i> Submit an idea</a>
+          <a href="{{ url_for('ideas.list_ideas', sort='trending') }}" class="btn btn-outline-light btn-lg"><i class="bi bi-fire"></i> See what's trending</a>
+        {% else %}
+          <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">Get started — it's free</a>
+          <a href="{{ url_for('ideas.list_ideas') }}" class="btn btn-outline-light btn-lg">Browse ideas</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-lg-5 d-none d-lg-block" aria-hidden="true">
+      <div class="hero-stack">
+        <div class="hero-mini"><span class="mini-vote">▲</span><div>Mobile app for timesheets<small>Technology · Approved</small></div></div>
+        <div class="hero-mini"><span class="mini-vote">+12</span><div>Solar panels on the roof<small>Sustainability · Under review</small></div></div>
+        <div class="hero-mini"><span class="mini-vote">+8</span><div>Monthly lunch &amp; learn<small>Education · Implemented</small></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="row g-3 mb-4" aria-label="Platform statistics">
+  {% for label, value, icon in [('Ideas', stats.ideas, 'lightbulb'), ('Members', stats.users, 'people'), ('Votes cast', stats.votes, 'hand-thumbs-up'), ('Comments', stats.comments, 'chat-dots')] %}
+  <div class="col-6 col-md-3">
+    <div class="card stat-card h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="stat-icon"><i class="bi bi-{{ icon }}"></i></div>
+      <div><div class="stat-value">{{ value|compact }}</div><div class="text-muted-2 small">{{ label }}</div></div>
+    </div></div>
+  </div>
+  {% endfor %}
+</section>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="h5 mb-0"><i class="bi bi-trophy-fill text-warning"></i> Top ideas</h2>
+      <a href="{{ url_for('ideas.list_ideas', sort='top') }}" class="small fw-semibold">See all →</a>
+    </div>
+    <div class="card mb-4 overflow-hidden">
+      <div class="list-group list-group-flush">
+      {% for idea in top_ideas %}
+        <a class="list-group-item row-link d-flex align-items-center gap-3 py-3" href="{{ url_for('ideas.detail', idea_id=idea.id) }}">
+          <span class="rank rank-{{ loop.index }}">{{ loop.index }}</span>
+          <div class="flex-grow-1 min-w-0">
+            <div class="fw-semibold text-truncate">{{ idea.title }}</div>
+            <div class="small text-muted-2">{{ idea.category.name }} · by {{ idea.submitter.username }}</div>
+          </div>
+          <span class="d-none d-sm-inline">{{ status_badge(idea) }}</span>
+          <span class="score-pill">{{ '%+d'|format(idea.score) if idea.score else 0 }}</span>
+        </a>
+      {% else %}
+        {% call empty('lightbulb', 'No ideas yet', 'Be the first to share one!') %}<a class="btn btn-primary" href="{{ url_for('ideas.create') }}">Submit an idea</a>{% endcall %}
+      {% endfor %}
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="h5 mb-0"><i class="bi bi-clock-history text-primary"></i> Latest ideas</h2>
+      <a href="{{ url_for('ideas.list_ideas') }}" class="small fw-semibold">See all →</a>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="list-group list-group-flush">
+      {% for idea in recent_ideas %}
+        <a class="list-group-item row-link py-3" href="{{ url_for('ideas.detail', idea_id=idea.id) }}">
+          <div class="d-flex justify-content-between gap-2">
+            <span class="fw-semibold text-truncate">{{ idea.title }}</span>
+            <span class="small text-muted-2 flex-none text-nowrap">{{ idea.created_at|timeago }}</span>
+          </div>
+          <div class="small text-muted-2">{{ idea.category.name }} · by {{ idea.submitter.username }}</div>
+        </a>
+      {% else %}
+        <div class="list-group-item text-muted-2">Nothing here yet.</div>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card mb-4">
+      <div class="card-header"><i class="bi bi-people-fill text-primary"></i> Top contributors</div>
+      <div class="list-group list-group-flush">
+        {% for c in contributors %}
+        <a class="list-group-item row-link d-flex align-items-center gap-3" href="{{ url_for('main.user_profile', username=c.user.username) }}">
+          <span class="rank rank-{{ loop.index }}">{{ loop.index }}</span>
+          {{ avatar(c.user) }}
+          <div class="flex-grow-1 min-w-0"><div class="fw-semibold text-truncate">{{ c.user.username }}</div><div class="small text-muted-2">{{ c.ideas }} idea{{ '' if c.ideas == 1 else 's' }}</div></div>
+          <span class="score-pill">{{ '%+d'|format(c.score) if c.score else 0 }}</span>
+        </a>
+        {% else %}
+        <div class="list-group-item text-muted-2 small">Contributors will appear here.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-tags-fill text-primary"></i> Categories</div>
+      <div class="card-body">
+        {% for c in categories %}
+        <a class="d-block text-decoration-none text-reset mb-3" href="{{ url_for('ideas.list_ideas', category=c.id) }}">
+          <div class="d-flex justify-content-between small mb-1"><span class="fw-medium">{{ c.name }}</span><span class="text-muted-2">{{ c.count }}</span></div>
+          <div class="progress" style="height:6px" role="progressbar" aria-label="{{ c.name }} share" aria-valuenow="{{ c.pct }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: {{ c.pct }}%"></div></div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="mt-5" aria-labelledby="how">
+  <h2 id="how" class="h4 text-center mb-4">How it works</h2>
+  <div class="row g-3">
+    {% for n, icon, title, text in [
+      (1, 'pencil-square', 'Share', 'Describe your idea and pick a category — or create a new one.'),
+      (2, 'hand-thumbs-up', 'Vote &amp; discuss', 'The community votes and discusses in threaded comments.'),
+      (3, 'clipboard-check', 'Evaluate', 'Reviewers set a status and explain their decision openly.'),
+      (4, 'rocket-takeoff', 'Implement', 'Approved ideas move forward until they are implemented.')] %}
+    <div class="col-sm-6 col-lg-3"><div class="card step-card">
+      <div class="step-num">{{ n }}</div>
+      <h3 class="h6"><i class="bi bi-{{ icon }} text-primary"></i> {{ title|safe }}</h3>
+      <p class="small text-muted-2 mb-0">{{ text }}</p>
+    </div></div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

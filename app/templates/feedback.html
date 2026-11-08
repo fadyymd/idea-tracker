@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field with context %}
+{% block title %}Feedback{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card"><div class="card-body p-4">
+      <h1 class="h4"><i class="bi bi-chat-heart text-primary"></i> Help us improve</h1>
+      <p class="text-muted-2">Report a problem or suggest an improvement for the Idea Tracker itself. Administrators read every message.</p>
+      <form method="post" novalidate data-loading>
+        {{ form.hidden_tag() }}
+        {{ field(form.kind) }}
+        {{ field(form.message, rows=6, placeholder='Describe what happened or what you would like to see…', counter='fb-count') }}
+        <button class="btn btn-primary" type="submit"><i class="bi bi-send"></i> Send feedback</button>
+      </form>
+    </div></div>
+  </div>
+</div>
+{% endblock %}
